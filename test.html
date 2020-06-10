@@ -3,14 +3,14 @@
     <head>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
         <script>
-var x = document.getElementById("demo");
+//var x = document.getElementById("demo");
 
 function getLocation() {
     //alert("ccc");
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showPosition);
   } else { 
-    x.innerHTML = "Geolocation is not supported by this browser.";
+    alert("nooo");
   }
 }
 
@@ -18,9 +18,9 @@ function showPosition(position) {
     alert(position.coords.latitude);
     alert(position.coords.longitude);
     
-  x.innerHTML = "Latitude: " + position.coords.latitude + 
-  "<br>Longitude: " + position.coords.longitude;
+  
 }
+window.onload = getLocation;
 </script>
     </head>
 <body>
