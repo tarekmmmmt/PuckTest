@@ -2,8 +2,12 @@
 <html>
     <head>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
-        <script>
-//var x = document.getElementById("demo");
+        
+    </head>
+<body>
+<p id="demo"></p>
+<script>
+var x = document.getElementById("demo");
 
 function getLocation() {
     //alert("ccc");
@@ -16,9 +20,9 @@ function getLocation() {
 }
 
 function showPosition(position) {
-    var textfield = document.createElement("input");
-    textfield.type = "text";
-    textfield.setAttribute("value",position.coords.latitude);
+    x.innerHTML = "Latitude: " + position.coords.latitude + 
+  "<br>Longitude: " + position.coords.longitude;
+   
    
     
     
@@ -26,10 +30,6 @@ function showPosition(position) {
 }
 window.onload = getLocation;
 </script>
-    </head>
-<body>
-<p id="demo"></p>
-
 
 </body>
 </html>
