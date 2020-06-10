@@ -7,6 +7,7 @@
 
 function getLocation() {
     //alert("ccc");
+    
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showPosition);
   } else { 
@@ -15,8 +16,11 @@ function getLocation() {
 }
 
 function showPosition(position) {
-    alert(position.coords.latitude);
-    alert(position.coords.longitude);
+    var textfield = document.createElement("input");
+    textfield.type = "text";
+    textfield.setAttribute("value",position.coords.latitude);
+   
+    
     
   
 }
@@ -24,7 +28,7 @@ window.onload = getLocation;
 </script>
     </head>
 <body>
-
+<p id="demo"></p>
 
 
 </body>
