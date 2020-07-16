@@ -1,11 +1,623 @@
+
+
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
         
+<!-------------------------------------------include 'includes/header.html'-------------------------------------------------->
+<meta charset="UTF-8">
+
+<!-------------------------------------------load staticfiles-------------------------------------------------->
+<script>
+
+
+'use strict';
+
+//initiate the time
+var date1 = new Date();
+var videoElement = document.querySelector('video');
+var audioSelect = document.querySelector('select#audioSource');
+var videoSelect = document.querySelector('select#videoSource');
+var canvas = document.querySelector('#canvas');
+var video= document.querySelector('#video');
+var Result = $("#result_strip");
+
+
+navigator.mediaDevices.enumerateDevices()
+  .then(gotDevices).then(getStream).catch(handleError);
+
+audioSelect.onchange = getStream;
+videoSelect.onchange = getStream;
+
+function gotDevices(deviceInfos) {
+    alert("tttt");
+  for (var i = 0; i !== deviceInfos.length; ++i) {
+    var deviceInfo = deviceInfos[i];
+    var option = document.createElement('option');
+    option.value = deviceInfo.deviceId;
+    if (deviceInfo.kind === 'audioinput') {
+      option.text = deviceInfo.label ||
+        'microphone ' + (audioSelect.length + 1);
+      audioSelect.appendChild(option);
+    } else if (deviceInfo.kind === 'videoinput') {
+      option.text = deviceInfo.label || 'camera ' +
+        (videoSelect.length + 1);
+      videoSelect.appendChild(option);
+    } else {
+      console.log('Found one other kind of source/device: ', deviceInfo);
+    }
+  }
+}
+
+function getStream() {
+  if (window.stream) {
+    window.stream.getTracks().forEach(function(track) {
+      track.stop();
+    });
+  }
+  var widthVideo = function(){
+    if (window.innerWidth < 600){
+      return window.innerWidth;
+    }
+    else{
+      return 500;
+    }
+  };
+   var heightVideo = function(){
+    if (window.innerHeight < 800 && window.innerWidth < 600){
+      return window.innerHeight;
+    }
+    else{
+      return 600;
+    }
+  };
+  var constraints = {
+    audio: {
+      deviceId: {exact: audioSelect.value}
+    },
+    video: {
+      deviceId: {exact: videoSelect.value},
+        width:widthVideo(),
+        height:heightVideo()
+    }
+  };
+
+  navigator.mediaDevices.getUserMedia(constraints).
+    then(gotStream).catch(handleError);
+}
+
+function gotStream(stream) {
+  window.stream = stream; // make stream available to console
+  videoElement.srcObject = stream;
+}
+
+function handleError(error) {
+  console.log('Error: ', error);
+}
+
+
+
+ function takepicture() {
+
+  var widthVideo = function(){
+    if (window.innerWidth < 600){
+      return window.innerWidth;
+    }
+    else{
+      return 500;
+    }
+  };
+   var heightVideo = function(){
+    if (window.innerHeight < 800 && window.innerWidth < 600){
+      return window.innerHeight;
+    }
+    else{
+      return 600;
+    }
+  };
+   var width = widthVideo();
+   var height = heightVideo();
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d').drawImage(video, 0, 0, width, height);
+    var dataUrl = canvas.toDataURL('image/jpg');
+    // console.log(dataUrl);
+    $.ajax({
+    //type: "POST",
+    //url: "/decode/",
+    type: "POST",
+    url: "/decode/",
+    data: {
+    imgBase64: dataUrl
+    }
+    }).done(function(data) {
+
+        if(data.code =='NO BarCode Found'){
+
+
+            console.log("Trying..")
+            var interval = setTimeout(function(){
+
+                var date2 = new Date();
+                var diff = date2 - date1;
+                if(diff > 100000){
+
+                    Result.html('Try Again : Time Out');
+                    clearTimeout(interval);
+
+                }
+
+                $('#startbutton').click();
+
+
+            },2000);
+
+
+        }
+        else{
+            // console.log(data.code);
+            var obj = JSON.parse(data);
+            var i;
+            var tcode = "";
+            Result.html('<b>Detected</b> :)<ol>');
+            for(i=0; i<obj.length;i++){
+                Result.append("<li><ul><li>Code: <b>"+obj[i].code+"</b></li><li>Type: <b>"+obj[i].type+"</b></li></ul></li>");
+                tcode += obj[i].code;
+            }
+            Result.append("</ol>")
+            window.navigator.vibrate(200);
+            clearTimeout(interval);
+            alert(data)
+            alert(tcode);
+        }
+
+        // Do Any thing you want
+    })
+        .fail(function(){
+            console.log('Failed')
+        });
+
+  }
+  startbutton.addEventListener('click', function(ev){
+      
+      takepicture();
+      Result.html("Searching..");
+      ev.preventDefault();
+      }, false);
+
+
+
+</script>
+<!--------------------------------------end-----load staticfiles-------------------------------------------------->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <!-- Compiled and minified CSS -->
+
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">-->
+  <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">-->
+  
+    <link href="https://fonts.googleapis.com/css?family=Tajawal" rel="stylesheet">
+<style>
+    #videoSource{
+  display:block;
+}
+
+#btn-download{
+  display:none;
+}
+////////////////////<!-------------------stylefile------------------------------->
+*{
+    padding:0;
+    margin:0;
+}
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    font-family: 'Tajawal', sans-serif;
+}
+.container{
+    width:100% !important;
+    max-width: 100%!important;
+}
+.mynavcolor{
+    background: rgba(0,0,0,0);
+    position: absolute;
+    width:100%;
+    box-shadow: none !important;
+}
+#content-main{
+    width:100% !important;
+    height: 100%;
+    height: -webkit-fill-available;
+    margin:0px;
+    display:flex;
+    top:0;
+    max-width: 100%!important;
+
+}
+
+
+#nav-mobile li a {
+    font-size: 30px;
+    color: white;
+}
+#nav-desk li a{
+    font-size:22px;
+    margin-left:10px;
+    margin-top:5px;
+    margin-bottom:5px;
+
+    display:flex;
+}
+#nav-desk li:hover a{
+    text-decoration:underline white dashed;
+    background:rgba(250, 235, 215, 0);
+}
+.side-nav{
+    text-align: center !important;
+    padding-top:20%;
+    background:#fc6767c4;
+}
+
+
+/*USER Page*/
+
+.user-content{
+    height:60px;
+    background: #ec008c;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to left, #fc6767, #ec008c);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to left, #fc6767, #ec008c);
+}
+.dropdown-content li a{
+    color:#fc6767 !important;
+}
+
+
+
+div.select{
+  width:180px;
+  display:flex;
+  color:#ec008c;border: 1px #ec008c dashed;
+  text-align:center;
+  border-radius:20px;
+  position:absolute;
+  z-index:10000;
+  margin:20px;
+}
+#result_strip{
+  background:rgba(238, 238, 238,0);
+  width:90%;
+  height:auto;
+  position:absolute;
+    text-align: left !important;
+  z-index:100;
+  color:#ec008c;
+  font-weight:500;
+  margin-top:100px;
+  margin-left:5%;
+}
+@media(min-width:600px){
+  div.select{
+  left:calc(50% - 250px);
+  }
+  #result_strip{
+  left:calc(50% - 250px);
+}
+}
+
+.select i{
+  color:#ec008c;
+}
+.select > label{
+  align-items:center;
+  display:flex;
+  margin-left:5px;
+}
+
+.select > #videoSource{
+  display:block;
+  width:180px;
+  padding-top:10px;
+  font-size:12px;
+  text-align:center;
+  float:left;
+  border:0px;
+  margin-right:15px;
+   background: transparent;
+
+}
+
+#container{
+  text-align:center;
+}
+#container h1{
+    font-size: 35px;
+    margin: 20px 10px;
+}
+#container p{
+    font-size: 18px;
+
+}
+#startbutton{
+  position:absolute;
+  background:#ec008c;
+    display:block;
+    width:50px;
+    height:50px;
+    text-align:center;
+    border: 2px #ec008c solid;
+    border-radius:50%;;
+    float:right;
+    margin-top:-80px;
+    padding-top:5px;
+    color:#f5f5f5;
+    left:calc(50% - 20px);
+}
+
+.drawingBuffer{
+  display:none !important;
+
+}
+
+html, body{
+
+overflow-x: -moz-hidde-unscrollable;
+    overflow-x: -moz-scrollbars-horizontal !important;
+    overflow-x: hidden;
+}
+#container h1{
+  color:#ec008c;
+  text-decoration-line: underline;
+    text-decoration-style: double;
+    margin-top:30px;
+    font-size:30px;
+  text-transform:uppercase;
+}
+p{
+  margin:20px !important;
+  font-size:16px !important;
+}
+.sub{
+    font-size: 12px;
+}
+.myname{
+  color:#ec008c;
+  position:absolute;
+  margin-top:-30px !important;
+  font-size:10px !important;
+}
+////////////////////////////////////////end////////<!-------------------stylefile------------------------------->
+
+</style>
+
+<!--------------------------------------------------------------------------------------------->
+
+        <title>Fountain BarCode Reader</title>
+        <style type="text/css">
+
+      </style>
     </head>
-<body>
-<p id="demo"></p>
+    <body>
+<!---------------------------------------include 'includes/navbar.html'------------------------------------------------------>
+        <ul id="dropdown1" class="dropdown-content" id="user-dropdown">
+  <li><a href="#!">Profile</a></li>
+  <li class="divider"></li>
+  <li><a href="#!">Logout</a></li>
+</ul>
+<nav class="navbar mynavcolor" role="navigation" id="menu">
+   <!-- Navigation Bar Begin -->
+   <div class="nav-wrapper">
+      
+
+       <!-- List Item Begin -->
+      <ul class="hide-on-med-and-down" id="nav-desk">
+         <li><form>
+      
+        <div class="remember">
+          <h2  hidden>Welcome to our Fountain Code Reader (FBR)</h2>
+          <input id="entername" type="text" required placeholder="Enter your name" onchange="myFunction(this.value)">
+          <input  id="submitname" type="submit" value="Say hello">
+          <input  id="forgetname" type="reset" value="Forget" >
+        </div>
+        <!--<div class="forget">-->
+               
+               <!-- <input id="forgetname" type="reset" value="Forget" hidden>-->
+        <!--</div>-->
+      </form></li>
+      
+
+      </ul>
+
+
+      <!-- Navigation Bar End -->
+      <!-- Mobile Nav Bar Begin -->
+      <ul id="nav-mobile" class="side-nav" style="transform: translateX(-100%);">
+         <li><form>
+      
+        <div class="remember">
+          <h2  hidden>Welcome to our Fountain Code Reader (FBR)</h2>
+          <input id="entername" type="text" required placeholder="Enter your name" onchange="myFunction(this.value)">
+          <input  id="submitname" type="submit" value="Say hello" >
+          <input  id="forgetname" type="reset" value="Forget" >
+        </div>
+        <!--<div class="forget">-->
+               
+               <!-- <input id="forgetname" type="reset" value="Forget" hidden>-->
+        <!--</div>-->
+      </form></li>
+      </ul>
+      <!-- Mobile Nav Bar End -->
+      <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>                           </div>
+      
+      
+      
+</nav>
+
+<script>
+function myFunction(val) {
+  alert("Thank " + val + "  for Sharing Our FBR   " );
+  
+  alert( "jjjjjj" );
+  // store the entered name in web storage
+  localStorage.mobile = val; //nameInput.value
+  alert( localStorage.mobile );
+  //localStorage.setItem('name', nameInput.value);
+  // run nameDisplayCheck() to sort out displaying the
+  // personalized greetings and updating the form display
+  nameDisplayCheck();
+}
+
+
+
+
+</script>
+
+
+<!-------------------end----------------include 'includes/navbar.html'---------------------------------------------------------->
+        <div class="container user-content">
+            <div class="user-content-display">
+            </div>
+        </div>
+
+        <div id="container">
+            <h1>Fountain Code Reader (FBR)</h1>
+            <p>FBR is a business technology which detects and read barcode and Qr codes from the live streaming webcam, laptop cam and mobile phones (back and front both) camera.</p>
+            <p class="sub">Just place any type of code in front of camera of mobile or laptop or tablet.</p>
+
+            <div class="">
+                <label for="audioSource"></label><select id="audioSource"></select>
+            </div>
+            <div class="video-field">
+                <div id="result_strip">
+                    <ul class="thumbnails"></ul>
+                </div>
+{#                <div class="decoration"></div>#}
+                <div class="select">
+                    <label for="videoSource"><i class='material-icons'>camera_rear</i></label><select id="videoSource"></select>
+                </div>
+                <video id="video" muted autoplay></video>
+                <button id="startbutton"><i class='material-icons'>camera</i></button>
+                <p class="myname">FBR is Developed By : Dr. Tarek Aly git</p>
+            </div>
+
+{#            <div id="interactive" class="viewport"><video autoplay="true" preload="auto" src="" muted="true" playsinline="true"></video>#}
+            <ul id="decoded"></ul>
+
+            <canvas id="canvas" class="drawingBuffer"></canvas><br clear="all"></div>
+             <p>*Requires Chrome 30 or later.</p>
+            
+<!-----------------------------------static 'js/index.js'---------------------------------------------------------->
+<script>
+            // create needed constants
+const rememberDiv = document.querySelector('.remember');
+const forgetDiv = document.querySelector('.forget');
+const form = document.querySelector('form');
+const nameInput = document.querySelector('#entername');
+const submitBtn = document.querySelector('#submitname');
+const forgetBtn = document.querySelector('#forgetname');
+
+const h1 = document.querySelector('h1');
+const personalGreeting = document.querySelector('.personal-greeting');
+
+
+
+// Stop the form from submitting when a button is pressed
+form.addEventListener('submit', function(e) {
+    alert( "jjjjjj" );
+  //e.preventDefault();
+});
+
+// run function when the 'Say hello' button is clicked
+submitBtn.addEventListener('click', function() {
+    alert( "jjjjjj" );
+  // store the entered name in web storage
+  localStorage.mobile = "tarek"; //nameInput.value
+  alert( localStorage.mobile );
+  //localStorage.setItem('name', nameInput.value);
+  // run nameDisplayCheck() to sort out displaying the
+  // personalized greetings and updating the form display
+  nameDisplayCheck();
+});
+
+
+// run function when the 'Forget' button is clicked
+forgetBtn.addEventListener('click', function() {
+  // Remove the stored name from web storage
+  alert( "jjjjjj foorehet" );
+  localStorage.removeItem('name');
+  // run nameDisplayCheck() to sort out displaying the
+  // generic greeting again and updating the form display
+  nameDisplayCheck();
+});
+
+
+// define the nameDisplayCheck() function
+function nameDisplayCheck() {
+        
+  // check whether the 'name' data item is stored in web Storage
+  if(localStorage.mobile) {
+  //if(localStorage.getItem('name')) {
+    // If it is, display personalized greeting
+    //alert( localStorage.mobile );
+    let name = localStorage.mobile ;
+    //let name = localStorage.getItem('name');
+    alert("Thank " + name + "  for Sharing Our FBR  check " );
+    h1.textContent = 'Welcome to our Fountain Code Reader (FBR), ' + name;
+    document.getElementById("entername").style.visibility = "hidden";
+    document.getElementById("submitname").style.visibility = "hidden";
+    
+    personalGreeting.textContent = 'Welcome to our Fountain Code Reader (FBR), ' + name + '! We hope you have fun while you are here.';
+    // hide the 'remember' part of the form and show the 'forget' part
+    //forgetDiv.style.display = 'block';
+    //rememberDiv.style.display = 'none';
+  } else {
+    // if not, display generic greeting
+    h1.textContent = 'Welcome to our Fountain Code Reader (FBR) ';
+    
+    //document.getElementById("video").style.visibility = "hidden";
+    //document.getElementById("fstartbutton").style.visibility = "hidden";
+
+    document.getElementById("forgetname").style.visibility = "hidden";
+    personalGreeting.textContent = 'Welcome to our Fountain Code Reader (FBR). We hope you have fun while you are here.';
+    // hide the 'forget' part of the form and show the 'remember' part
+    //forgetDiv.style.display = 'none';
+    //rememberDiv.style.display = 'block';
+  }
+}
+
+document.body.onload = nameDisplayCheck;
+</script>
+<!-------------------end----------------static 'js/index.js'---------------------------------------------------------->
+            
+{#            <script src="{% static 'js/quagga.min.js' %}"></script>#}
+            
+        </div>
+<!-----------------------------------include 'includes/script.html'---------------------------------------------------------->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+Compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+<script>
+
+    $("#content-main").css({'height':window.innerHeight});
+    $("#login").css({'height':window.innerHeight});
+    $(".dropdown-button").dropdown();
+</script>
+<script>
+
+    $(".button-collapse").sideNav();
+
+    //{#});#}
+
+
+  // Or with jQuery
+
+  $('.dropdown-trigger').dropdown();
+</script>
+<!-------------------end----------------include 'includes/script.html'---------------------------------------------------------->
+  <p id="demo"></p>
 <script>
 var x = document.getElementById("demo");
 
@@ -30,6 +642,5 @@ function showPosition(position) {
 }
 window.onload = getLocation;
 </script>
-
-</body>
+    </body>
 </html>
